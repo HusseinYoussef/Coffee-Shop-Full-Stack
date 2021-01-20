@@ -13,11 +13,8 @@ CORS(app)
 
 # db_drop_and_create_all()
 
-## ROUTES
-@app.route('/')
-def index(jwt):
-    return 'Hello World'
 
+# ROUTES
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
     drinks = Drink.query.all()
@@ -29,6 +26,7 @@ def get_drinks():
         'success': True,
         'drinks': [drink.short() for drink in drinks]
     }), 200
+
 
 @app.route('/drinks-detail', methods=['GET'])
 @requires_auth('get:drinks-detail')
@@ -42,6 +40,7 @@ def get_drinks_details(jwt):
         'success': True,
         'drinks': [drink.long() for drink in drinks]
     }), 200
+
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
@@ -69,6 +68,7 @@ def create_drinks(jwt):
         'success': True,
         'drinks': [drink.long()]
     }), 200
+
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
 @requires_auth('patch:drinks')
@@ -104,6 +104,7 @@ def update_drink(jwt, drink_id):
         'drinks': [drink.long()]
     }), 200
 
+
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
 @requires_auth('delete:drinks')
 def delete_drink(jwt, drink_id):
@@ -122,7 +123,8 @@ def delete_drink(jwt, drink_id):
         'delete': drink.id
     }), 200
 
-## Error Handling
+
+# Error Handling
 @app.errorhandler(400)
 def bad_request(error):
     return jsonify({
@@ -130,6 +132,7 @@ def bad_request(error):
         'error': 400,
         'message': 'Bad Request'
     }), 400
+
 
 @app.errorhandler(401)
 def unauthorized(error):
@@ -139,6 +142,7 @@ def unauthorized(error):
         'message': 'Unauthorized'
     }), 401
 
+
 @app.errorhandler(403)
 def forbidden(error):
     return jsonify({
@@ -146,6 +150,7 @@ def forbidden(error):
         'error': 403,
         'message': 'Permission not allowed'
     }), 403
+
 
 @app.errorhandler(404)
 def not_found(error):
@@ -155,6 +160,7 @@ def not_found(error):
         'message': 'Not Found'
     }), 404
 
+
 @app.errorhandler(405)
 def method_not_allowed(error):
     return jsonify({
@@ -163,13 +169,15 @@ def method_not_allowed(error):
         'message': 'Method Not Allowed'
     }), 405
 
+
 @app.errorhandler(422)
 def unprocessable(error):
     return jsonify({
-        "success": False, 
+        "success": False,
         "error": 422,
         "message": "Unprocessable"
     }), 422
+
 
 @app.errorhandler(500)
 def server_error(error):
