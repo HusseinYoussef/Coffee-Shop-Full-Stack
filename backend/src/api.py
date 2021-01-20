@@ -21,6 +21,7 @@ def index(jwt):
 @app.route('/drinks', methods=['GET'])
 def get_drinks():
     drinks = Drink.query.all()
+    # no drinks
     if len(drinks) == 0:
         abort(404)
 
@@ -30,9 +31,11 @@ def get_drinks():
     }), 200
 
 @app.route('/drinks-detail', methods=['GET'])
-def get_drinks_details():
+@requires_auth('get:drinks-detail')
+def get_drinks_details(jwt):
     drinks = Drink.query.all()
     if len(drinks) == 0:
+        # no drinks
         abort(404)
 
     return jsonify({
@@ -41,9 +44,15 @@ def get_drinks_details():
     }), 200
 
 @app.route('/drinks', methods=['POST'])
-def add_drinks():
+@requires_auth('post:drinks')
+def create_drinks(jwt):
     body = request.get_json()
 
+    # require body
+    if body is None:
+        abort(400)
+
+    # get body params
     title = body.get('title', None)
     recipe = body.get('recipe', None)
     if (title is None) or (recipe is None):
@@ -58,16 +67,21 @@ def add_drinks():
 
     return jsonify({
         'success': True,
-        'drinks': drink.long()
-    }), 201
+        'drinks': [drink.long()]
+    }), 200
 
 @app.route('/drinks/<int:drink_id>', methods=['PATCH'])
-def update_drink(drink_id):
+@requires_auth('patch:drinks')
+def update_drink(jwt, drink_id):
     drink = Drink.query.get(drink_id)
     if drink is None:
         abort(404)
 
     body = request.get_json()
+    # require body
+    if body is None:
+        abort(400)
+
     title = body.get('title', None)
     recipe = body.get('recipe', None)
     if title:
@@ -82,15 +96,17 @@ def update_drink(drink_id):
         drink.update()
     except Exception as e:
         print(e)
+        # can't update exception
         abort(422)
 
     return jsonify({
         'success': True,
-        'drinks': drink.long()
+        'drinks': [drink.long()]
     }), 200
 
 @app.route('/drinks/<int:drink_id>', methods=['DELETE'])
-def delete_drink(drink_id):
+@requires_auth('delete:drinks')
+def delete_drink(jwt, drink_id):
     drink = Drink.query.get(drink_id)
     if drink is None:
         abort(404)
@@ -152,5 +168,13 @@ def unprocessable(error):
     return jsonify({
         "success": False, 
         "error": 422,
-        "message": "unprocessable"
+        "message": "Unprocessable"
     }), 422
+
+@app.errorhandler(500)
+def server_error(error):
+    return jsonify({
+        'success': False,
+        'error': 500,
+        'message': 'Server error'
+    }), 500
