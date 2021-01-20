@@ -9,7 +9,20 @@ from .auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
-CORS(app)
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
+
+@app.after_request
+def after_request(response):
+    response.headers.add(
+                'Allow-Control-Allow-Headers',
+                'Content-Type,Authorization,true'
+                )
+    response.headers.add(
+                'Allow-Control-Allow-Methods',
+                'GET, POST, PATCH, DELETE, OPTIONS'
+                )
+
+    return response
 
 # db_drop_and_create_all()
 
@@ -56,6 +69,9 @@ def create_drinks(jwt):
     recipe = body.get('recipe', None)
     if (title is None) or (recipe is None):
         abort(400)
+
+    if not isinstance(recipe, list):
+        abort(422)
 
     drink = Drink(title=title, recipe=json.dumps(recipe))
     try:
